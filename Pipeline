@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Pull Source Code from GitHub') {
+            steps {
+                git branch: 'main', url: 'https://github.com/ASHISHKHOPADE-DEVOPS/Pass.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image with tag version v1.BUILD_ID
+                    sh 'docker image build -t $JOB_NAME:v1.$BUILD_ID .'
+
+                    // Tag the Docker image with a custom repository and version tag
+                    sh 'docker image tag $JOB_NAME:v1.$BUILD_ID ashishakhopade/$JOB_NAME:v1.$BUILD_ID'
+
+                    // Tag the Docker image with the 'latest' tag for the same repository
+                    sh 'docker image tag $JOB_NAME:v1.$BUILD_ID ashishakhopade/$JOB_NAME:latest'
+                }
+            }
+        }
+
+        stage('Push Image To Docker Hub') {
+            steps {
+                script {
+                    // Hardcoded Docker Hub credentials
+                    def dockerUsername = 'ashishakhopade'
+                    def dockerPassword = 'ashishkhopade'
+
+                    // Docker login with hardcoded credentials
+                    sh "echo ${dockerPassword} | docker login -u ${dockerUsername} --password-stdin"
+
+                    // Push the versioned image to Docker Hub
+                    sh "docker image push ashishakhopade/$JOB_NAME:v1.$BUILD_ID"
+
+                    // Push the latest tagged image to Docker Hub
+                    sh "docker image push ashishakhopade/$JOB_NAME:latest"
+
+                    // Remove the local images to clean up disk space
+                    sh "docker rmi $JOB_NAME:v1.$BUILD_ID ashishakhopade/$JOB_NAME:v1.$BUILD_ID ashishakhopade/$JOB_NAME:latest"
+                }
+            }
+        }
+
+        stage('Deployment Of Docker Container') {
+            steps {
+                script {
+                    def dockerrun = 'docker run -p 8006:80 -d --name hell ashishakhopade/scripted-pipeline-demo'
+
+                    // Use SSH agent for authentication - Ensure the correct credentials ID is used
+                    sshagent(credentials: ['dockerhubpassworda']) {
+                        // SSH to the server and run the docker container
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@172.31.19.91 ${dockerrun}"
+                    }
+                }
+            }
+        }
+    }
+}
+
