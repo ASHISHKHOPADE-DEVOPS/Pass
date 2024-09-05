@@ -2,7 +2,7 @@
 FROM centos:latest
 
 # Maintainer information
-LABEL maintainer="ashishkhopade"
+LABEL maintainer="sanjay.dahiya332@gmail.com"
 
 RUN sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*.repo \
     && sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*.repo
@@ -29,3 +29,7 @@ RUN cp -rvf markups-kindle/* . \
     && rm -rf markups-kindle _MACOSX
 
 # Expose port 80 for Apache HTTP server
+EXPOSE 80
+
+# Start Apache HTTP server in foreground when container starts
+CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
