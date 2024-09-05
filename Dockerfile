@@ -2,7 +2,7 @@
 FROM centos:latest
 
 # Maintainer information
-LABEL maintainer="sanjay.dahiya332@gmail.com"
+LABEL maintainer="ashishkhopade"
 
 RUN sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*.repo \
     && sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*.repo
